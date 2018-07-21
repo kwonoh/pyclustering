@@ -49,8 +49,8 @@ WARNING_FLAGS = -Wall -Wpedantic
 
 
 # Toolchain arguments.
-CFLAGS = -O2 -MMD -MP -std=$(CPLUS_STANDARD) $(CFLAG_PIC) $(CFLAG_PLATFORM) $(WARNING_FLAGS)
-LFLAGS = -shared $(LFLAG_PLATFORM)
+CFLAGS = -O3 -MMD -MP -std=$(CPLUS_STANDARD) $(CFLAG_PIC) $(CFLAG_PLATFORM) $(WARNING_FLAGS)
+LFLAGS = -shared $(LFLAG_PLATFORM) -ltbb
 
 
 # Executable library file
@@ -65,7 +65,7 @@ SOURCES_DIRECTORY = src
 SOURCES_DIRECTORIES = $(addprefix $(SOURCES_DIRECTORY)/, $(MODULES))
 SOURCES = $(foreach SUBDIR, $(SOURCES_DIRECTORIES), $(wildcard $(SUBDIR)/*.cpp))
 
-INCLUDES = -I$(SOURCES_DIRECTORY)
+INCLUDES = -I$(SOURCES_DIRECTORY) -I/usr/include
 
 
 # Project objects
