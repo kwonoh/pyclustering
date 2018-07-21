@@ -85,25 +85,29 @@ void kmedoids::update_clusters(void) {
         clusters[i].push_back(medoids[i]);
     }
 
-    for (size_t index_point = 0; index_point < m_data_ptr->size(); index_point++) {
-        if (std::find(medoids.begin(), medoids.end(), index_point) != medoids.cend()) {
-            continue;
-        }
+    std::vector<size_t> cluster_labels(m_data_ptr->size());
 
-        size_t index_optim = 0;
-        double dist_optim = 0.0;
+    tbb::parallel_for(
+        std::size_t(0), m_data_ptr->size(), std::size_t(1),
+        [&](std::size_t const index_point) {
+            size_t index_optim = 0;
+            double dist_optim = 0.0;
 
-        for (size_t index = 0; index < medoids.size(); index++) {
-            const size_t index_medoid = medoids[index];
-            const double distance = m_calculator(index_point, index_medoid);
+            for (size_t index = 0; index < medoids.size(); index++) {
+                const size_t index_medoid = medoids[index];
+                const double distance = m_calculator(index_point, index_medoid);
 
-            if ( (distance < dist_optim) || (index == 0) ) {
-                index_optim = index;
-                dist_optim = distance;
+                if ((distance < dist_optim) || (index == 0)) {
+                    index_optim = index;
+                    dist_optim = distance;
+                }
             }
-        }
 
-        clusters[index_optim].push_back(index_point);
+            cluster_labels[index_point] = index_optim;
+        });
+
+    for (size_t index_point = 0; index_point < m_data_ptr->size(); index_point++) {
+        clusters[cluster_labels[index_point]].push_back(index_point);
     }
 }
 
@@ -114,9 +118,11 @@ void kmedoids::calculate_medoids(cluster & p_medoids) {
     p_medoids.clear();
     p_medoids.resize(clusters.size());
 
-    for (size_t index = 0; index < clusters.size(); index++) {
-        p_medoids[index] = calculate_cluster_medoid(clusters[index]);
-    }
+    tbb::parallel_for(std::size_t(0), clusters.size(), std::size_t(1),
+                      [&](std::size_t const index) {
+                          p_medoids[index] =
+                              calculate_cluster_medoid(clusters[index]);
+                      });
 }
 
 
