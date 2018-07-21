@@ -147,18 +147,18 @@ size_t kmedoids::calculate_cluster_medoid(const cluster & p_cluster) const {
 
 
 double kmedoids::calculate_changes(const medoid_sequence & p_medoids) const {
-    double maximum_difference = 0.0;
-    for (size_t index = 0; index < p_medoids.size(); index++) {
-        const size_t index_point1 = p_medoids[index];
-        const size_t index_point2 = m_result_ptr->medoids()[index];
+    std::vector<double> distances(p_medoids.size());
 
-        const double distance = m_calculator(index_point1, index_point2);
-        if (distance > maximum_difference) {
-            maximum_difference = distance;
-        }
-    }
+    tbb::parallel_for(
+        std::size_t(0), p_medoids.size(), std::size_t(1),
+        [&](std::size_t const index) {
+            const size_t index_point1 = p_medoids[index];
+            const size_t index_point2 = m_result_ptr->medoids()[index];
 
-    return maximum_difference;
+            distances[index] = m_calculator(index_point1, index_point2);
+        });
+
+    return *std::max_element(distances.begin(), distances.end());
 }
 
 
